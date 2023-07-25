@@ -1,0 +1,1 @@
+FROM vmware/dispatch-python3-base:latest

@@ -1,0 +1,19 @@
+version: '1.0.0'
+services:
+  tabdet:
+    image: table_det:latest
+
+  tabtsr:
+    image: table_tsr:latest
+    depends_on:
+      - service1
+
+  textdet:
+    image: textdet:latest
+    depends_on:
+      - service2
+
+  textrec:
+    image: textrec:latest
+    depends_on:
+      - service2
