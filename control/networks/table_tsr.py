@@ -78,7 +78,6 @@ for sample in tqdm(imgs):
         im = cv2.resize(im, (int(w/ra), int(max_h)))
     # print(i.shape)
     result = inference_model(model, im)[0]
-    pred_dict[sample] = result
 
     # detection results visualization
     if do_visualize:
@@ -99,6 +98,8 @@ for sample in tqdm(imgs):
                 cv2.line(img, (box[j], box[j + 1]), (box[(j + 2) % len(box)], box[(j + 3) % len(box)]), (0, 0, 255), 1)
         cv2.imwrite(os.path.join(vis_dir, img_name), img)
 
+    result.update({"ratio":ra})
+    pred_dict[sample] = result
     with open(os.path.join(savepath, f"res_{img_name.split('.')[0]}_TSR.txt"), "w", encoding="utf-8") as writer:
         json.dump(pred_dict[sample], writer, ensure_ascii=False)
 
