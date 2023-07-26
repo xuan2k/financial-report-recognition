@@ -21,7 +21,7 @@ def recognize(image, save_path, boxes):
 
 
     # transformer = r"/home/xuan/Project/OCR/code/git_code/PaddleOCR/pretrained/vgg_transformer.pth"
-    recognizer = r'/home/xuan/Project/OCR/code/git_code/PaddleOCR/pretrained/model.yml'
+    recognizer = r'/home/xuan/Project/OCR/code/baseline/control/configs/model/textrec/model.yml'
     # print(recognizer[64])
     # config = Cfg.load_config_from_name('vgg_seq2seq')
     config = Cfg.load_config_from_file(recognizer)
@@ -47,3 +47,13 @@ def recognize(image, save_path, boxes):
     # print(txts)
     f.close()
     return txts
+
+if __name__=="__main__":
+    recognizer = r'/home/xuan/Project/OCR/code/baseline/control/configs/model/textrec/model.yml'
+    config = Cfg.load_config_from_file(recognizer)
+    config['cnn']['pretrained']=False
+    config['device'] = 'cuda:0'
+
+    detector = Predictor(config)
+    print("check")
+    

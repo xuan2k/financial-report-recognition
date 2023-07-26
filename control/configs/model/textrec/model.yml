@@ -43,7 +43,7 @@ optimizer:
   pct_start: 0.1
 predictor:
   beamsearch: false
-pretrain: /home/xuan/Project/OCR/code/git_code/PaddleOCR/pretrained/vgg_seq2seq.pth
+pretrain: /home/xuan/Project/OCR/code/baseline/control/checkpoints/textrec/vgg_seq2seq.pth
 quiet: false
 seq_modeling: seq2seq
 trainer:
@@ -62,4 +62,4 @@ transformer:
   encoder_hidden: 256
   img_channel: 256
 vocab: 'aAàÀảẢãÃáÁạẠăĂằẰẳẲẵẴắẮặẶâÂầẦẩẨẫẪấẤậẬbBcCdDđĐeEèÈẻẺẽẼéÉẹẸêÊềỀểỂễỄếẾệỆfFgGhHiIìÌỉỈĩĨíÍịỊjJkKlLmMnNoOòÒỏỎõÕóÓọỌôÔồỒổỔỗỖốỐộỘơƠờỜởỞỡỠớỚợỢpPqQrRsStTuUùÙủỦũŨúÚụỤưƯừỪửỬữỮứỨựỰvVwWxXyYỳỲỷỶỹỸýÝỵỴzZ0123456789!"#$%&''()*+,-./:;<=>?@[\]^_`{|}~ '
-weights: /home/xuan/Project/OCR/code/git_code/PaddleOCR/pretrained/vgg_seq2seq.pth
+weights: /home/xuan/Project/OCR/code/baseline/control/checkpoints/textrec/vgg_seq2seq.pth
