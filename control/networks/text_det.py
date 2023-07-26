@@ -7,6 +7,7 @@ import math
 from tqdm import tqdm
 import argparse
 import os
+import json
 # import torch
 
 def parse_arg():
@@ -14,10 +15,10 @@ def parse_arg():
     parser = argparse.ArgumentParser("Parser for OCR pipeline")
     
     parser.add_argument("--image_dir", type=str, 
-                        default='/home/xuan/Project/OCR/code/git_code/PaddleOCR/implement/data')
+                        default='/home/xuan/Project/OCR/sample/result/rgb/1.png')
     
     parser.add_argument("--save_dir", type=str, 
-                        default='/home/xuan/Project/OCR/code/git_code/PaddleOCR/implement/result')
+                        default='/home/xuan/Project/OCR/sample/result/text')
     
     parser.add_argument("--binarize", action='store_true')
 
@@ -32,6 +33,7 @@ def parse_arg():
 def create_font(txt, sz, font_path="./doc/fonts/simfang.ttf"):
     font_size = int(sz[1] * 0.99)
     font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
+    # print(txt)
     length = font.getsize(txt)[0]
     if length > sz[0]:
         font_size = int(font_size * sz[0] / length)
@@ -89,6 +91,7 @@ def draw_ocr_box_txt(image,
         txts = [None] * len(boxes)
     
     for idx, (box, txt) in enumerate(zip(boxes, txts)):
+        txt=str(txt)
         if scores is not None and scores[idx] < drop_score:
             continue
         color = (random.randint(0, 255), random.randint(0, 255),
@@ -132,18 +135,40 @@ def run(img_path, save_path, ocr):
     # im_show = draw_ocr(image, boxes, None, None, font_path= font_path)
     # im_show = Image.fromarray(im_show)
     # im_show.save('./result/result.jpg')
-    # txts = [line[1][0] for line in result]
+    txts = [line[1][0] for line in result]
     # scores = [line[1][1] for line in result]
 
     im2 = draw_ocr_box_txt(image, boxes, txts, None, font_path=font_path, drop_score=0)
     im2 = Image.fromarray(im2)
 
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
 
     im2.save(os.path.join(save_path,'result_visualize.jpg'))
 
+    bboxes = []
+    res = {}
+    for box in boxes:
+        x = [int(i[0]) for i in box]
+        y = [int(i[1]) for i in box]
+        bbox = [min(x),min(y), max(x), max(y)]
+        bboxes.append(bbox)
+    
+    f = open(os.path.join(save_path, "res.json"), 'w', encoding= "utf-8")
+    # print(bboxes)
+    bboxes.reverse()
+    res["bboxes"] = bboxes
+    json.dump(res, f, ensure_ascii=False)
+
 if __name__ == '__main__':
     args = parse_arg()
-    ocr = PaddleOCR(use_angle_cls=False, lang="en", type="structure", recovery=True) # need to run only once to download and load model into memory
+    ocr = PaddleOCR(use_angle_cls=False, 
+                    lang="en", 
+                    type="ocr", 
+                    recovery=False,
+                    table=False,
+                    layout=False,
+                    rec=False) # need to run only once to download and load model into memory
     
     if os.path.isdir(args.image_dir):
         t = tqdm(os.listdir(args.image_dir))

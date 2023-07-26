@@ -22,10 +22,10 @@ import argparse
 arg = argparse.ArgumentParser("Table structure recognition")
 
 arg.add_argument("--img_dir", type=str,
-                 default="/home/xuan/Project/OCR/result/demo/rgb/0002.png")
+                 default="/workspace/warehouse/result/rgb/1.png")
 
 arg.add_argument("--out_dir", type=str,
-                 default="/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/result")
+                 default="/workspace/warehouse/result")
 
 arg.add_argument("--visualize", action="store_true")
 
@@ -45,8 +45,8 @@ for path in [out_path, vis_dir, savepath]:
 
 # path setting
 # savepath = "/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/result/pred" # path to save prediction
-config_file = '/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/configs/lgpma_pub.py' # config path
-checkpoint_file = '/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/pretrained/maskrcnn-lgpma-pub-e12-pub.pth' # model path
+config_file = '../configs/model/table_tsr/lgpma_pub.py' # config path
+checkpoint_file = '../checkpoints/table_tsr/maskrcnn-lgpma-pub-e12-pub.pth' # model path
 
 # loading model from config file and pth file
 model = init_model(config_file, checkpoint_file)

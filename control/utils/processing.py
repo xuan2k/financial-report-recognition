@@ -22,7 +22,6 @@ def crop_img(image, bbox):
     # print(image.shape)
     return image
 
-
 def create_font(txt, sz, font_path="./doc/fonts/simfang.ttf"):
     font_size = int(sz[1] * 0.99)
     font = ImageFont.truetype(font_path, font_size, encoding="utf-8")
@@ -105,3 +104,6 @@ def binarize(image, thresh = 0.7):
     thresh *= 255
     image = image.point( lambda p: 255 if p > thresh else 0 )
     return image
+
+if __name__== "__main__":
+    print("main")
