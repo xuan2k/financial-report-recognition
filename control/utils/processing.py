@@ -9,6 +9,8 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from bs4 import BeautifulSoup
 import json
 from scipy.spatial import KDTree
+from box import *
+from functools import reduce
 
 def vis_img(image, bbox):
     bbox = np.asarray(bbox)
@@ -151,6 +153,8 @@ def to_excel():
 
     data = json.load(f)
 
+    rec_f = open("/home/xuan/Project/OCR/sample/result/text/1/res.json", "r")
+
 
     html_table = data["html"]
     bboxes = data["content_ann"]["bboxes"]
@@ -162,7 +166,9 @@ def to_excel():
         box *= ratio
         box = list(box.astype(np.int64))
         bboxes.append(box)
-
+ 
+    rec = json.load(rec_f)
+    rec_boxes = rec["bboxes"]
     # Parse the HTML table using BeautifulSoup
     soup = BeautifulSoup(html_table, 'html.parser')
 
@@ -172,6 +178,7 @@ def to_excel():
 
     # Initialize an empty list to store the table data
     table_data = []
+    list_a = []
 
     # Loop through each row in the table
     cellss = []
@@ -183,7 +190,7 @@ def to_excel():
         # print(cells)
         
         # Extract the content of each cell
-        row_data = [str(bboxes[count + i]) for i in range(len(cells))]
+        row_data = [(bboxes[count + i]) for i in range(len(cells))]
         count += len(cells)
         # row_data = [cell.text.strip() for cell in cells]
         
@@ -211,7 +218,7 @@ def to_excel():
                 # print(f"check rows {i}, {rowspan}: {table_data[i+1:i+rowspan][:]}")
                 if j < 3:
                     for row in table_data[i+1:i+rowspan]:
-                        row.insert(j, '2')
+                        row.insert(j, [])
                     merge.append([i+1,j+1,i+rowspan,j+1])
                 else:
                     for row in table_data[i+1:i+rowspan]:
@@ -220,7 +227,7 @@ def to_excel():
             if merge_col:
                 # print("check col")
                 for k in range(1, colspan):
-                    table_data[i].insert(j+k, '2')   
+                    table_data[i].insert(j+k, [])   
                 merge.append([i+1,j+1,i+1,j+colspan])
 
         #     if merge_col:
@@ -238,10 +245,33 @@ def to_excel():
         # while len(row_data) < 5:
         #     row_data.append('2')
         # print(row_data)
+        list_a += table_data[i]
         print(table_data[i])
-        ws.append(table_data[i])
-    for val in merge:
-        ws.merge_cells(start_row=val[0], start_column=val[1], end_row=val[2], end_column=val[3])
+        # ws.append([str(c) for c in table_data[i]])
+    
+    out = match_boxes(list_a, rec_boxes, rec["text"])
+    print(out)
+
+
+    for i, row in enumerate(table_data):
+        row = [out[5*i:5*i+5]]
+        tmp = row
+        row = []
+        for item in tmp[0]:
+            print(item)
+            if len(item) > 1:
+                item = reduce(lambda x, y: x + " " + y if len(x) > 0 and len(y) > 0 else x + y, item)
+            else:
+                item = item[0]
+            row.append(item)
+        rel = row[0] + " " + row[1]
+        row[0] = (rel).replace(rel.split(' ')[0], "") if len(row[0]) > 0 else row[1]
+        row.remove(row[1])
+        ws.append(row)
+
+
+    # for val in merge:
+        # ws.merge_cells(start_row=val[0], start_column=val[1], end_row=val[2], end_column=val[3])
     # Create a DataFrame from the table data
     # df = pd.DataFrame(table_data)
 
@@ -275,6 +305,8 @@ def to_excel():
     wb.save(excel_file)
 
     print(f"DataFrame saved to '{excel_file}' with cell merging.")
+
+    # print("check", table_data, rec_boxes)
 
 
 def calculate_center(box):
@@ -396,37 +428,37 @@ def match_boxes_kd_tree(list_a, list_b, distance_threshold=10):
 
 
 if __name__== "__main__":
-    # to_excel()
-    # print("main")
+    to_excel()
+    # # print("main")
 
-    # # Example usage:
-    # boxes_A = [[723, 1, 824, 74],[], [867, 3, 1020, 74], [1091, 1, 1237, 34]]
-    # boxes_B = [[727, 0, 827, 31], [890, 0, 1021, 31], [1095, 0, 1241, 31]]
-    # texts_B = ["Text 1", "Text 2", "Text 3"]
+    # # # Example usage:
+    # # boxes_A = [[723, 1, 824, 74],[], [867, 3, 1020, 74], [1091, 1, 1237, 34]]
+    # # boxes_B = [[727, 0, 827, 31], [890, 0, 1021, 31], [1095, 0, 1241, 31]]
+    # # texts_B = ["Text 1", "Text 2", "Text 3"]
 
-    # matched_texts = match_text_with_cells(boxes_A, boxes_B, texts_B)
-    # print(matched_texts)
+    # # matched_texts = match_text_with_cells(boxes_A, boxes_B, texts_B)
+    # # print(matched_texts)
 
-    a = open("/home/xuan/Project/OCR/sample/result/pred/res_1_TSR.txt", 'r')
-    b = open("/home/xuan/Project/OCR/sample/result/text/1/res.json", "r")
+    # a = open("/home/xuan/Project/OCR/sample/result/pred/res_1_TSR.txt", 'r')
+    # b = open("/home/cxuan/Project/OCR/sample/result/text/1/res.json", "r")
 
-    res_a = json.load(a)
-    res_b = json.load(b)
+    # res_a = json.load(a)
+    # res_b = json.load(b)
 
-    # Example usage
-    # list_a = [[1, 2, 3, 4], [], [5, 6, 7, 8], [9, 10, 11, 12], [], [13, 14, 15, 16]]
-    # list_b = [[17, 18, 19, 20], [21, 22, 23, 24], [25, 26, 27, 28], [29, 30, 31, 32], [33, 34, 35, 36]]
-    list_a = res_a["content_ann"]["bboxes"]
-    ratio = res_a["ratio"]
-    tmp = list_a
-    list_a = []
-    for box in tmp:
-        box = np.asarray(box).astype(np.float64)
-        box *= ratio
-        box = list(box.astype(np.int64))
-        list_a.append(box)
+    # # Example usage
+    # # list_a = [[1, 2, 3, 4], [], [5, 6, 7, 8], [9, 10, 11, 12], [], [13, 14, 15, 16]]
+    # # list_b = [[17, 18, 19, 20], [21, 22, 23, 24], [25, 26, 27, 28], [29, 30, 31, 32], [33, 34, 35, 36]]
+    # list_a = res_a["content_ann"]["bboxes"]
+    # ratio = res_a["ratio"]
+    # tmp = list_a
+    # list_a = []
+    # for box in tmp:
+    #     box = np.asarray(box).astype(np.float64)
+    #     box *= ratio
+    #     box = list(box.astype(np.int64))
+    #     list_a.append(box)
     
-    list_b = res_b["bboxes"]
+    # list_b = res_b["bboxes"]
 
-    matches = match_boxes_kd_tree(list_a, list_b)
-    print(matches)
+    # matches = match_boxes_kd_tree(list_a, list_b)
+    # print(matches)
