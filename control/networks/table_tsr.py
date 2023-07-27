@@ -22,7 +22,7 @@ import argparse
 arg = argparse.ArgumentParser("Table structure recognition")
 
 arg.add_argument("--img_dir", type=str,
-                 default="/workspace/warehouse/result/rgb/1.png")
+                 default="/workspace/warehouse/result/rgb/2.png")
 
 arg.add_argument("--out_dir", type=str,
                  default="/workspace/warehouse/result")

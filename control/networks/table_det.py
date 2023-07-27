@@ -50,7 +50,7 @@ import mmcv
 
 def parse_arg():
     parser = argparse.ArgumentParser("Options for cascadeTabnet table detection inference.")
-    parser.add_argument("--img_dir", default="/workspace/warehouse/1.png",
+    parser.add_argument("--img_dir", default="/workspace/warehouse/2.png",
                         help="Single input image or image list to predict.")
     
     parser.add_argument("--save_dir", default="/workspace/warehouse/result",

@@ -133,6 +133,21 @@ def IoI(boxA, boxB):
 
     return percentage_intersection
 
+def number_processing(txt):
+    removal = ['(',')','.',',']
+    for c in removal:
+        txt = txt.replace(c, "")
+    if txt.isdigit():
+        pos = 1
+        insert = 0
+        while len(txt) > (3*pos + insert):
+            #1234 -> 1.234: len = 4, 3*pos = 3 -> input '.' to str[-3]
+            txt = txt[:len(txt)-3*pos-insert] + '.' + txt[-3*pos-insert:]
+            pos += 1
+            insert += 1
+        return txt
+    return None
+
 def to_excel():
 
     excel_file = '/home/xuan/Project/OCR/sample/result/pred/demo.xlsx'
@@ -169,6 +184,11 @@ def to_excel():
  
     rec = json.load(rec_f)
     rec_boxes = rec["bboxes"]
+
+    for i, txt in enumerate(rec["text"]):
+        t_res = number_processing(txt)
+        if t_res:
+            rec["text"][i] = t_res 
     # Parse the HTML table using BeautifulSoup
     soup = BeautifulSoup(html_table, 'html.parser')
 
@@ -265,7 +285,7 @@ def to_excel():
                 item = item[0]
             row.append(item)
         rel = row[0] + " " + row[1]
-        row[0] = (rel).replace(rel.split(' ')[0], "") if len(row[0]) > 0 else row[1]
+        row[0] = (rel).replace(rel.split(' ')[0], "").strip(" ") if len(row[0]) > 0 else row[1].strip(" ")
         row.remove(row[1])
         ws.append(row)
 
