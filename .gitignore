@@ -2,3 +2,5 @@ libs/
 __pycache__
 *.png
 checkpoints/
+test/
+demo/

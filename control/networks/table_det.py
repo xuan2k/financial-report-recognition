@@ -56,10 +56,10 @@ def parse_arg():
     parser.add_argument("--save_dir", default="/workspace/warehouse/result",
                         help="Directory to save inference result.")
     
-    parser.add_argument("--config", default='../configs/model/table_det/cascade_mask_rcnn_hrnetv2p_w32_20e.py',
+    parser.add_argument("--config", default='./configs/model/table_det/cascade_mask_rcnn_hrnetv2p_w32_20e.py',
                         help="Path to config file.")
     
-    parser.add_argument("--model", default='../checkpoints/table_det/epoch_14.pth',
+    parser.add_argument("--model", default='./checkpoints/table_det/epoch_14.pth',
                         help="Path to pretrained model file.")
     
     parser.add_argument("--visualize", action="store_true",

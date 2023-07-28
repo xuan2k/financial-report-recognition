@@ -150,7 +150,11 @@ def number_processing(txt):
 
 def to_excel():
 
-    excel_file = '/home/xuan/Project/OCR/sample/result/pred/demo.xlsx'
+    ver = 2
+
+    excel_file = f'/home/xuan/Project/OCR/sample/result/pred/demo_{ver}.xlsx'
+    f = open(f"/home/xuan/Project/OCR/sample/result/pred/res_{ver}_TSR.txt", 'r')
+    rec_f = open(f"/home/xuan/Project/OCR/sample/result/text/{ver}/res.json", "r")
     wb = Workbook()
     ws = wb.active
 
@@ -163,14 +167,14 @@ def to_excel():
     # html_table = '''
     # <html><body><table><thead><tr><td>1</td><td rowspan=\"3\">1</td><td rowspan=\"3\">1</td><td colspan=\"2\">1</td><td colspan=\"2\">1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr></thead><tbody><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td rowspan=\"2\">1</td><td rowspan=\"2\">1</td><td colspan=\"3\">1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td rowspan=\"2\">1</td><td>1</td><td>1</td><td rowspan=\"2\">1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td rowspan=\"2\">1</td><td>1</td><td rowspan=\"2\">1</td><td rowspan=\"2\">1</td><td rowspan=\"2\">1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>1</td><td>1</td><td>1</td><td colspan=\"4\">1</td></tr></tbody></table></body></html>
     # '''
-
-    f = open("/home/xuan/Project/OCR/sample/result/pred/res_1_TSR.txt", 'r')
+    row_range = []
+    col_range = []
+    mean_row_range = [0, 0]
+    mean_col_range = [0, 0]
+    num_row = 0
+    num_col = 0
 
     data = json.load(f)
-
-    rec_f = open("/home/xuan/Project/OCR/sample/result/text/1/res.json", "r")
-
-
     html_table = data["html"]
     bboxes = data["content_ann"]["bboxes"]
     ratio = data["ratio"]
@@ -229,10 +233,20 @@ def to_excel():
             colspan = int(cell.get('colspan', 1))
             merge_row = rowspan > 1
             merge_col = colspan > 1
-            # print(rowspan, colspan)
+            merge_mix = rowspan > 1 and colspan > 1
             # print(rowspan>1, colspan > 1)
-            # merge_mix = rowspan > 1 and colspan > 1
-            if merge_row:
+
+            if merge_mix:
+                print(rowspan, colspan)
+                print("mix")
+                for h in range(0, rowspan):
+                    for k in range(1, colspan):
+                        if h != 0 and k == 1:
+                            table_data[i + h].insert(j, [])   
+
+                        table_data[i + h].insert(j+k, [])   
+
+            elif merge_row:
                 # print(cells)
 
                 # print(f"check rows {i}, {rowspan}: {table_data[i+1:i+rowspan][:]}")
@@ -244,7 +258,7 @@ def to_excel():
                     for row in table_data[i+1:i+rowspan]:
                         row.insert(j, table_data[i][j])
                     
-            if merge_col:
+            elif merge_col:
                 # print("check col")
                 for k in range(1, colspan):
                     table_data[i].insert(j+k, [])   
@@ -270,23 +284,24 @@ def to_excel():
         # ws.append([str(c) for c in table_data[i]])
     
     out = match_boxes(list_a, rec_boxes, rec["text"])
-    print(out)
-
-
+    # print(out)
+    # print(list_a)
+    n_row = len(table_data[0])
     for i, row in enumerate(table_data):
-        row = [out[5*i:5*i+5]]
+        row = [out[n_row*i:n_row*i+n_row]]
+        # print(row)
         tmp = row
         row = []
         for item in tmp[0]:
-            print(item)
+            # print(item)
             if len(item) > 1:
                 item = reduce(lambda x, y: x + " " + y if len(x) > 0 and len(y) > 0 else x + y, item)
             else:
                 item = item[0]
             row.append(item)
-        rel = row[0] + " " + row[1]
-        row[0] = (rel).replace(rel.split(' ')[0], "").strip(" ") if len(row[0]) > 0 else row[1].strip(" ")
-        row.remove(row[1])
+        # rel = row[0] + " " + row[1]
+        # row[0] = (rel).replace(rel.split(' ')[0], "").strip(" ") if len(row[0]) > 0 else row[1].strip(" ")
+        # row.remove(row[1])
         ws.append(row)
 
 

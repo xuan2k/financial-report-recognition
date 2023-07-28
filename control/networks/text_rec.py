@@ -8,7 +8,7 @@ import json
 
 def viet_ocr(detector, img, count = 0):
     img = Image.fromarray(img)
-    img.save(f"./frag/{count}.png")
+    # img.save(f"./frag/{count}.png")
     s = detector.predict(img)
     return s
 
@@ -16,16 +16,16 @@ def recognize(detector, image, result, save_path = None):
     boxes = result["bboxes"]
     txts = []
     viet = np.array(image)
-    count = 0
+    # count = 0
     # torch.save(detector.model.state_dict(), "ocr.pth")
     for box in boxes:
         # print(box)
         # x = [int(i[0]) for i in box]
         # y = [int(i[1]) for i in box]
-        # txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]])
-        txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]], count)
+        txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]])
+        # txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]], count)
         # print(f'-> Detected: {txt}')
-        count += 1
+        # count += 1
         txts.append(txt)
     if save_path:
 
@@ -60,10 +60,10 @@ if __name__=="__main__":
 
     detector = Predictor(config)
 
-    img_path = "/home/xuan/Project/OCR/sample/result/rgb/1.png"
+    img_path = "/home/xuan/Project/OCR/sample/result/rgb/2.png"
     image = Image.open(img_path).convert("RGB")
 
-    res_path = "/home/xuan/Project/OCR/sample/result/text/1/res.json"
+    res_path = "/home/xuan/Project/OCR/sample/result/text/2/res.json"
 
     f = open(res_path, 'r', encoding="utf-8")
 

@@ -79,10 +79,10 @@ for sample in tqdm(imgs):
     # print(i.shape)
     result = inference_model(model, im)[0]
 
+    img_name = img_path.split("/")[-1]
     # detection results visualization
     if do_visualize:
         img = cv2.imread(img_path)
-        img_name = img_path.split("/")[-1]
         b_res = result['content_ann']['bboxes']
         if h > max_h:
             # b_res = np.asarray(b_res)
