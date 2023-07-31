@@ -15,144 +15,70 @@ import cv2
 from typing import Any
 import numpy as np
 from PIL import Image
+import yaml
 
-# class TableDetection():
-#     def __init__(self,
-#                  opts) -> None:
-#         self.opts = opts
-#         self.config_file = opts.config
-#         self.checkpoint_file = opts.model
-#         self.device = self.opts.device
-#         self.model = init_detector(self.config_file, self.checkpoint_file, device=self.device)
+class TableDetection():
+    def __init__(self,
+                 cfg) -> None:
+        
+        self.cfg = {}
 
-#     def load_image(self, image):
+        if isinstance(cfg, str):
+            with open(cfg, encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            self.cfg.update(config)
 
-#         img = Image.open(image)
+        elif isinstance(cfg, dict):    
+            self.cfg.update(cfg)
+        else:
+            raise TypeError("Unsupport config input type!")
 
+        self.config_file = self.cfg["config"]
+        self.checkpoint_file = self.cfg["checkpoint"]
+        self.device = self.cfg["device"]
+        self.model = init_detector(self.config_file, self.checkpoint_file, device=self.device)
+        self.input = None
+        self.ouput = None
 
-#         return [img]
+    def forward(self, x):
+        if isinstance(x, Image.Image):
+            # Convert the PIL image to a numpy array
+            numpy_array = np.array(x)
 
-#     def forward(self, x):
-#         self.input = self.load_image(x)
-#         self.output = []
-#         for item in self.input:
-#             self.ouput.append(inference_detector(self.model, item))
+            # Convert the numpy array to a cv2 image
+            x = cv2.cvtColor(numpy_array, cv2.COLOR_RGB2BGR)
 
-#     def __call__(self, image) -> Any:
-#             return self.forward(image)
+        self.input = x
+        self.ouput = inference_detector(self.model, self.input)
+        self.ouput = self.processing(self.ouput)
+        return self.ouput
+    
+    def processing(self, x):
+        if self.input is not None:
+            result = {}
+            bbox = list(x[0][0][0][0:4])
+            new_img = crop_img(self.input, bbox=bbox)
+            result["img"] = new_img
+            result["bbox"] = bbox
+            return result
+        else:
+            raise TypeError("The input is in NoneType.")
+
+    def __call__(self, image) -> Any:
+            return self.forward(image)
     
 # if __name__ == "__main__":
-#     t = TableDetection('a')
-#     t(input)
+#     cfg = r"/workspace/source/configs/model/table_det/model.yml"
+#     t = TableDetection(cfg)
+#     print("--> load ok")
+#     # t(input)
+#     img_path = r"/workspace/warehouse/sample/test2/1.png"
+#     img = cv2.imread(img_path)
 
-#import to check if the lib is installed
-import mmcv
+#     output = t(img)
 
-def parse_arg():
-    parser = argparse.ArgumentParser("Options for cascadeTabnet table detection inference.")
-    parser.add_argument("--img_dir", default="/workspace/warehouse/2.png",
-                        help="Single input image or image list to predict.")
-    
-    parser.add_argument("--save_dir", default="/workspace/warehouse/result",
-                        help="Directory to save inference result.")
-    
-    parser.add_argument("--config", default='./configs/model/table_det/cascade_mask_rcnn_hrnetv2p_w32_20e.py',
-                        help="Path to config file.")
-    
-    parser.add_argument("--model", default='./checkpoints/table_det/epoch_14.pth',
-                        help="Path to pretrained model file.")
-    
-    parser.add_argument("--visualize", action="store_true",
-                        help="Call it when we need to visualize the bounding box for table.")
-    
-    parser.add_argument("--crop", action="store_true",
-                        help="Call it when we need to visualize the bounding box for table.")
-    # parser.add_argument("--batch_size", default='/workspace/source/pretrained/epoch_14.pth',
-    #                     help="Path to pretrained model file.")
-    
-    return parser.parse_args()
+#     print(f"Check {output}")
+
+#     cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])
 
 
-if __name__ == '__main__':
-    # Load model
-
-    opts = parse_arg()
-
-    config_file = opts.config
-    checkpoint_file = opts.model
-    model = init_detector(config_file, checkpoint_file, device='cuda:0')
-
-    # Test a single image 
-    # img = "/workspace/warehouse/data/6.png"
-    img_dir = opts.img_dir
-    if os.path.isfile:
-        imgs = [os.path.basename(img_dir)]
-        img_dir = os.path.dirname(img_dir)
-    else:
-        imgs = os.listdir(img_dir)
-
-    # if not os.path.exists(opts.save_dir):
-    #     os.makedirs(opts.save_dir)
-
-    res_dir = os.path.join(opts.save_dir, "res")
-    rgb_dir = os.path.join(opts.save_dir, "rgb")
-
-    for directory in [opts.save_dir, res_dir, rgb_dir]:
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-    iter = tqdm(imgs)
-
-    for img in iter:
-        # Run Inference
-        img_path = os.path.join(img_dir, img)
-        result = inference_detector(model, img_path)
-        if len(result[0][0]) == 0 or result[0][0][0][4] < 0.97:
-            # print("No table found!")
-            # exit()
-            # iter.set_description(f"No table in {img}")
-            # shutil.copy(img_path, os.path.join(non_dir, img))
-            continue
-        # print(result)
-
-        # print(result[0][0])
-
-        bbox=list(result[0][0][0][0:4])
-
-        table_sq = m.sqrt(((bbox[1]-bbox[3])**2)*(bbox[0]-bbox[2])**2)
-        load_img = cv2.imread(img_path)
-        h,w,_ = load_img.shape
-        img_eq = h*w
-        if table_sq < 0.3*h*w:
-            # shutil.copy(img_path, os.path.join(tiny_dir, img))
-            continue
-
-        f = open(os.path.join(res_dir, f"res_{img.split('.')[0]}.txt"), 'w')
-
-        for e in result[0][0][0]: 
-            
-            f.write(str(e) + ',')
-
-        f.close()
-
-        # print(f"-> Tabel found in {img}. Result saved to res_{img.split('.')[0]}.txt")
-        iter.set_description(f"-> Tabel found in {img}.")
-
-        # print(result[0][0][0][0:3])
-        if opts.visualize:
-            # vis_img(img_path, rgb_dir, bbox=bbox)
-            res_img = vis_img(load_img, bbox=bbox)
-            cv2.imwrite(os.path.join(rgb_dir, img), res_img)
-
-        if opts.crop:
-            # vis_img(img_path, rgb_dir, bbox=bbox)
-            load_img = crop_img(load_img, bbox=bbox)
-            cv2.imwrite(os.path.join(rgb_dir, img), load_img)
-
-        # else:
-        #     shutil.copy(img_path, os.path.join(rgb_dir, img))
-            
-
-
-    # Visualization results
-    # show_result_pyplot(img, result,('Bordered', 'cell', 'Borderless'), score_thr=0.85)

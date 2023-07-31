@@ -1,0 +1,5 @@
+device: cuda:0
+
+config: /workspace/source/configs/model/table_det/cascade_mask_rcnn_hrnetv2p_w32_20e.py
+
+checkpoint: /workspace/source/checkpoints/table_det/epoch_14.pth

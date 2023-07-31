@@ -60,10 +60,10 @@ if __name__=="__main__":
 
     detector = Predictor(config)
 
-    img_path = "/home/xuan/Project/OCR/sample/result/rgb/2.png"
+    img_path = "/home/xuan/Project/OCR/demo/rgb/6.png"
     image = Image.open(img_path).convert("RGB")
 
-    res_path = "/home/xuan/Project/OCR/sample/result/text/2/res.json"
+    res_path = "/home/xuan/Project/OCR/demo/text/6/res.json"
 
     f = open(res_path, 'r', encoding="utf-8")
 

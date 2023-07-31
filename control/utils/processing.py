@@ -9,7 +9,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from bs4 import BeautifulSoup
 import json
 from scipy.spatial import KDTree
-from box import *
+from .box import *
 from functools import reduce
 
 def vis_img(image, bbox):
