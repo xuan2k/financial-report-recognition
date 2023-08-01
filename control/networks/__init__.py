@@ -1,4 +1,4 @@
-from table_det import *
-from table_tsr import *
-from text_det import *
-from text_rec import *
+# from table_det import TableDetection
+# from table_tsr import TableStructureRecognition
+# from text_det import TextDetection
+# from text_rec import *

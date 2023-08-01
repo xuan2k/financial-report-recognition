@@ -1,75 +1,89 @@
 import os
+import sys
+import json
+import random
+import cv2
 import numpy as np
+from typing import Any
 from PIL import Image
 from vietocr.tool.config import Cfg
 from vietocr.tool.predictor import Predictor
-import json
+from PIL import Image
 
+class TextRecognition():
+    def __init__(self,
+                 cfg) -> None:
+        
 
-def viet_ocr(detector, img, count = 0):
-    img = Image.fromarray(img)
-    # img.save(f"./frag/{count}.png")
-    s = detector.predict(img)
-    return s
+        if isinstance(cfg, str):
+            self.cfg = Cfg.load_config_from_file(cfg)
 
-def recognize(detector, image, result, save_path = None):
-    boxes = result["bboxes"]
-    txts = []
-    viet = np.array(image)
-    # count = 0
-    # torch.save(detector.model.state_dict(), "ocr.pth")
-    for box in boxes:
-        # print(box)
-        # x = [int(i[0]) for i in box]
-        # y = [int(i[1]) for i in box]
-        txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]])
-        # txt = viet_ocr(detector, viet[box[1]:box[3], box[0]:box[2]], count)
-        # print(f'-> Detected: {txt}')
-        # count += 1
-        txts.append(txt)
-    if save_path:
-
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
-
-        if os.path.isdir(save_path):
-            f = open(os.path.join(save_path, "res.json"), 'w', encoding="utf-8")
         else:
-            f = open(save_path, 'w', encoding="utf-8")
+            raise TypeError("Unsupport config input type!")
 
-        # for txt in txts:
-        #     f.write(f'{txt}\n')
-        result["text"] = txts
-        json.dump(result, f, ensure_ascii=False)
+        self.model = Predictor(self.cfg)
+        self.input = None
+        self.ouput = None
 
-        f.close()
-    return txts
+    def reload(self):
+        self.input = None
+        self.ouput = None
 
-if __name__=="__main__":
+    def forward(self, x):
+        self.reload()
+        if isinstance(x, Image.Image):
+            # Convert the PIL image to a numpy array
+            numpy_array = np.array(x)
+
+            # Convert the numpy array to a cv2 image
+            x = cv2.cvtColor(numpy_array, cv2.COLOR_RGB2BGR)
+
+        self.input = Image.fromarray(x)
+        self.ouput = self.model.predict(self.input)
+        # self.ouput = self.processing(self.ouput)
+        return self.ouput
     
-    # transformer = r"/home/xuan/Project/OCR/code/git_code/PaddleOCR/pretrained/vgg_transformer.pth"
-    recognizer = r'/home/xuan/Project/OCR/code/baseline/control/configs/model/textrec/model.yml'
-    # print(recognizer[64])
-    # config = Cfg.load_config_from_name('vgg_seq2seq')
-    config = Cfg.load_config_from_file(recognizer)
-    # config = Cfg.load_config_from_file("/tmp/vgg_seq2seq.pth")
-    # config = Cfg.load_config_from_file(transformer)
+    def processing(self, x):
+        if self.input is not None:
+            result = {}
+            bbox = [line for line in x]
+            bboxes = []
+            
+            for box in bbox:
+                x = [int(i[0]) for i in box]
+                y = [int(i[1]) for i in box]
+                tmp = [min(x),min(y), max(x), max(y)]
+                bboxes.append(tmp)
+            
+            bboxes.reverse()
+            result["bbox"] = bboxes
+            return result
+        else:
+            raise TypeError("The input is in NoneType.")
 
-    config['cnn']['pretrained']=False
-    config['device'] = 'cuda:0'
-
-    detector = Predictor(config)
-
-    img_path = "/home/xuan/Project/OCR/demo/rgb/6.png"
-    image = Image.open(img_path).convert("RGB")
-
-    res_path = "/home/xuan/Project/OCR/demo/text/6/res.json"
-
-    f = open(res_path, 'r', encoding="utf-8")
-
-    result = json.load(f)
-
-    recognize(detector, image, result, res_path)
-
-    print("check")
+    def __call__(self, image) -> Any:
+            return self.forward(image)
     
+# if __name__ == "__main__":
+    # cfg = r"../configs/model/text_rec/model.yml"
+    # t = TextRecognition(cfg)
+    # print("--> load ok")
+    # # t(input)
+    # img_path = r"/home/xuan/Project/OCR/demo/rgb/1.png"
+    # img = cv2.imread(img_path)
+
+    # bb_file = f"/home/xuan/Project/OCR/demo/text/1/res.json"
+    # with open(bb_file, 'r') as f:
+    #     res = json.load(f)
+
+    # bboxes = res["bboxes"]
+    
+    # for box in bboxes:
+
+    #     inp = crop_img(img, box)
+
+    #     output = t(inp)
+
+    #     print(f"Check {output}")
+
+    # cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])

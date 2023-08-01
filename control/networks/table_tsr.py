@@ -8,109 +8,102 @@
 # Date           :    2021-09-23
 ##################################################################################################
 """
+import sys
+import os
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+sys.path.append(parent_dir)
 
 import cv2
 import json
 import jsonlines
 import numpy as np
 from tqdm import tqdm
+from PIL import Image
 # from davarocr.davar_table.utils import TEDS, format_html
 from davarocr.davar_common.apis import inference_model, init_model
-import os
 import argparse
+import yaml
+from typing import Any
+import time
 
-arg = argparse.ArgumentParser("Table structure recognition")
+class TableStructureRecognition():
+    def __init__(self,
+                 cfg) -> None:
+        
+        self.cfg = {}
 
-arg.add_argument("--img_dir", type=str,
-                 default="/workspace/warehouse/result/rgb/2.png")
+        if isinstance(cfg, str):
+            with open(cfg, encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+            self.cfg.update(config)
 
-arg.add_argument("--out_dir", type=str,
-                 default="/workspace/warehouse/result")
+        elif isinstance(cfg, dict):    
+            self.cfg.update(cfg)
+        else:
+            raise TypeError("Unsupport config input type!")
 
-arg.add_argument("--visualize", action="store_true")
+        self.config_file = self.cfg["config"]
+        self.checkpoint_file = self.cfg["checkpoint"]
+        self.model = init_model(self.config_file, self.checkpoint_file)
+        self.max_height = self.cfg["max_height"]
+        self.resize = (False,1.0)
+        self.input = None
+        self.ouput = None
 
+    def reload(self):
+        self.resize = (False,1.0)
+        self.input = None
+        self.ouput = None
 
-arg = arg.parse_args()
+    def forward(self, x):
+        self.reload()
+        if isinstance(x, Image.Image):
+            # Convert the PIL image to a numpy array
+            numpy_array = np.array(x)
 
-# visualization setting
-do_visualize = arg.visualize # whether to visualize
-out_path = arg.out_dir
-vis_dir = os.path.join(out_path, "vis")
-savepath = os.path.join(out_path, "pred")
+            # Convert the numpy array to a cv2 image
+            x = cv2.cvtColor(numpy_array, cv2.COLOR_RGB2BGR)
+    
+        h,w,c = x.shape
+        ra = 1
+        if h > self.max_height:
+            ra = h/self.max_height
+            x = cv2.resize(x, (int(w/ra), int(self.max_height)))
+            self.resize = (True, ra)
 
-for path in [out_path, vis_dir, savepath]:
-    if not os.path.exists(path):
-        os.makedirs(path)
-# "/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/result/vis/" # path to save visualization results
+        self.input = x
+        self.ouput = inference_model(self.model, self.input)[0]
+        self.ouput = self.processing(self.ouput)
+        return self.ouput
+    
+    def processing(self, x):
+        if self.input is not None:
+            result = {}
+            bbox = x['content_ann']['bboxes']
 
-# path setting
-# savepath = "/home/xuan/Project/OCR/code/git_code/DAVAR-Lab-OCR/demo/table_recognition/lgpma/result/pred" # path to save prediction
-config_file = '../configs/model/table_tsr/lgpma_pub.py' # config path
-checkpoint_file = '../checkpoints/table_tsr/maskrcnn-lgpma-pub-e12-pub.pth' # model path
+            if self.resize[0]:
+                new_bbox = [[int(value*self.resize[1]) for value in sublist] for sublist in bbox]
+                x['content_ann']['bboxes'] = new_bbox
+            result.update(x)
+            return result
+        else:
+            raise TypeError("The input is in NoneType.")
 
-# loading model from config file and pth file
-model = init_model(config_file, checkpoint_file)
+    def __call__(self, image) -> Any:
+            return self.forward(image)
+    
+if __name__ == "__main__":
+    cfg = r"/workspace/source/configs/model/table_tsr/model.yml"
+    t = TableStructureRecognition(cfg)
+    print("--> load ok")
+    # t(input)
+    img_path = r"/workspace/warehouse/demo/rgb/1.png"
+    img = cv2.imread(img_path)
 
-# getting image prefix and test dataset from config file
-img_prefix = arg.img_dir
-# test_dataset = model.cfg["data"]["test"]["ann_file"]
-# with jsonlines.open(test_dataset, 'r') as fp:
-#     test_file = list(fp)
+    output = t(img)
 
-# generate prediction of html and save result to savepath
-pred_dict = dict()
+    print(f"Check {output}")
 
-if os.path.isfile:
-    imgs = [os.path.basename(img_prefix)]
-    img_prefix = os.path.dirname(img_prefix)
-else:
-    imgs = os.listdir(img_prefix)
-
-for sample in tqdm(imgs):
-    # predict html of table
-    img_path = os.path.join(img_prefix, sample)
-    im = cv2.imread(img_path)
-    # print(i.shape)
-    h,w,c = im.shape
-    max_h = 1024
-    if h > max_h:
-        ra = h/max_h
-        im = cv2.resize(im, (int(w/ra), int(max_h)))
-    # print(i.shape)
-    result = inference_model(model, im)[0]
-
-    img_name = img_path.split("/")[-1]
-    # detection results visualization
-    if do_visualize:
-        img = cv2.imread(img_path)
-        b_res = result['content_ann']['bboxes']
-        if h > max_h:
-            # b_res = np.asarray(b_res)
-            # b_res*=int(ra)
-            bboxes = [list(map(lambda x: int(x*ra), [b[0], b[1], b[2], b[1], b[2], b[3], b[0], b[3]])) for b in b_res if len(b) > 0]
-            # bboxes = [[ra*b[0], ra*b[1], ra*b[2], ra*b[1], ra*b[2], ra*b[3], ra*b[0], ra*b[3]] for b in b_res if len(b) > 0]
-        else:    
-            bboxes = [[b[0], b[1], b[2], b[1], b[2], b[3], b[0], b[3]] for b in b_res if len(b) > 0]
-            # bboxes = [[2*b[0], 2*b[1], 2*b[2], 2*b[1], 2*b[2], 2*b[3], 2*b[0], 2*b[3]] for b in b_res if len(b) > 0]
-
-        for box in bboxes:
-            for j in range(0, len(box), 2):
-                cv2.line(img, (box[j], box[j + 1]), (box[(j + 2) % len(box)], box[(j + 3) % len(box)]), (0, 0, 255), 1)
-        cv2.imwrite(os.path.join(vis_dir, img_name), img)
-
-    result.update({"ratio":ra})
-    pred_dict[sample] = result
-    with open(os.path.join(savepath, f"res_{img_name.split('.')[0]}_TSR.txt"), "w", encoding="utf-8") as writer:
-        json.dump(pred_dict[sample], writer, ensure_ascii=False)
-
-# generate ground-truth of html from pubtabnet annotation of test dataset.
-# gt_dict = dict()
-# for data in test_file:
-#     if data['filename'] in pred_dict.keys():
-#         str_true = data['html']['structure']['tokens']
-#         gt_dict[data['filename']] = {'html': format_html(data)}
-
-# evaluation using script from PubTabNet
-# teds = TEDS(structure_only=True, n_jobs=16)
-# scores = teds.batch_evaluate(pred_dict, gt_dict)
-# print(np.array(list(scores.values())).mean())
+    cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])

@@ -40,7 +40,12 @@ class TableDetection():
         self.input = None
         self.ouput = None
 
+    def reload(self):
+        self.input = None
+        self.ouput = None
+
     def forward(self, x):
+        self.reload()
         if isinstance(x, Image.Image):
             # Convert the PIL image to a numpy array
             numpy_array = np.array(x)
@@ -56,9 +61,9 @@ class TableDetection():
     def processing(self, x):
         if self.input is not None:
             result = {}
-            bbox = list(x[0][0][0][0:4])
-            new_img = crop_img(self.input, bbox=bbox)
-            result["img"] = new_img
+            bbox = list(x[0][0][0][0:4].astype(int))
+            # new_img = crop_img(self.input, bbox=bbox)
+            # result["img"] = new_img
             result["bbox"] = bbox
             return result
         else:

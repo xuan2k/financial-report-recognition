@@ -1,8 +1,8 @@
 # for train
-pretrain: /home/xuan/Project/OCR/code/baseline/control/checkpoints/textrec/vgg_seq2seq.pth
+pretrain: /home/xuan/Project/OCR/code/baseline/control/checkpoints/text_rec/vgg_seq2seq.pth
 
 # url or local path (for predict)
-weights: /home/xuan/Project/OCR/code/baseline/control/checkpoints/textrec/vgg_seq2seq.pth
+weights: /home/xuan/Project/OCR/code/baseline/control/checkpoints/text_rec/vgg_seq2seq.pth
 
 backbone: vgg19_bn
 cnn:
