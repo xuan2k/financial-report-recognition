@@ -1,0 +1,3 @@
+bank_BS: "content/label/bank_balancesheet.csv"
+bank_IS: "content/label/bank_incomestatement.csv"
+bank_CF: "content/label/bank_cashflow.csv"

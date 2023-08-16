@@ -69,7 +69,7 @@ class TextDetection():
                 bboxes.append(tmp)
             
             bboxes.reverse()
-            result["bbox"] = bboxes
+            result["bboxes"] = bboxes
             return result
         else:
             raise TypeError("The input is in NoneType.")
@@ -77,16 +77,28 @@ class TextDetection():
     def __call__(self, image) -> Any:
             return self.forward(image)
     
-# if __name__ == "__main__":
-#     cfg = r"../configs/model/text_det/model.yml"
-#     t = TextDetection(cfg)
-#     print("--> load ok")
-#     # t(input)
-#     img_path = r"/home/xuan/Project/OCR/demo/rgb/1.png"
-#     img = cv2.imread(img_path)
+if __name__ == "__main__":
+    cfg = r"../configs/model/text_det/model.yml"
+    t = TextDetection(cfg)
+    print("--> load ok")
+    # t(input)
+    # ver = 6
+    for i in range(40):
+        ver = i+1
 
-#     output = t(img)
+        img_path = f"/home/xuan/Project/OCR/code/git_code/table-transformer/out/sample/res_{ver}.png"
+        # img_path = f"/home/xuan/Project/OCR/demo/rgb/res_{ver}.png"
+        img = cv2.imread(img_path)
 
-#     print(f"Check {output}")
+        output = t(img)
+        out = f"/home/xuan/Project/OCR/demo/text_2/{ver}/res.json"
+
+        if not os.path.exists(os.path.dirname(out)):
+            os.makedirs(os.path.dirname(out))
+
+        with open(out, 'w', encoding="utf-8") as f:
+            json.dump(output, f, ensure_ascii=False)
+
+        print(f"Check {output}")
 
     # cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])

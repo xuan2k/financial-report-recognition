@@ -4,4 +4,5 @@ docker run --name tdcont\
            --gpus all\
            --shm-size=8GB\
            -p 8000:8000\
-           -it pytorch/pytorch:1.4-cuda10.1-cudnn7-devel
+           -it table_det:1.0.0
+        #    -it pytorch/pytorch:1.4-cuda10.1-cudnn7-devel

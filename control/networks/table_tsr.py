@@ -99,11 +99,25 @@ if __name__ == "__main__":
     t = TableStructureRecognition(cfg)
     print("--> load ok")
     # t(input)
-    img_path = r"/workspace/warehouse/demo/rgb/1.png"
-    img = cv2.imread(img_path)
+    ver = 6
+    for i in range(6):
+        ver = i+1
+        try:
+            img_path = f"/workspace/warehouse/demo/rgb/res_{ver}.png"
+            out = f"/workspace/warehouse/demo/pred_1/res_{ver}_TSR.txt"
 
-    output = t(img)
+            if not os.path.exists(os.path.dirname(out)):
+                os.makedirs(os.path.dirname(out))
 
-    print(f"Check {output}")
+            img = cv2.imread(img_path)
 
-    cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])
+            output = t(img)
+            output["ratio"] = 1.0
+            with open(out, 'w', encoding="utf-8") as f:
+                json.dump(output, f, ensure_ascii=False)
+
+            print(f"Check {output}")
+        except:
+            print(f"Cannot run {ver}")
+
+    # cv2.imwrite(os.path.join(os.path.dirname(img_path), "res.png"), output["img"])

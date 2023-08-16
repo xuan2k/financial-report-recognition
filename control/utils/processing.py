@@ -150,7 +150,7 @@ def number_processing(txt):
 
 def to_excel():
 
-    ver = 2
+    ver = 5
 
     excel_file = f'/home/xuan/Project/OCR/sample/result/pred/demo_{ver}.xlsx'
     f = open(f"/home/xuan/Project/OCR/sample/result/pred/res_{ver}_TSR.txt", 'r')

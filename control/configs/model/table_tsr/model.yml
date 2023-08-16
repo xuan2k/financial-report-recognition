@@ -2,6 +2,6 @@ config: /workspace/source/configs/model/table_tsr/lgpma_pub.py
 
 checkpoint: /workspace/source/checkpoints/table_tsr/maskrcnn-lgpma-pub-e12-pub.pth
 
-max_height: 1024
+max_height: 1080
 
 visualize: False
